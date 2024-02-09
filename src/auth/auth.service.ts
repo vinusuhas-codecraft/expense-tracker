@@ -80,11 +80,12 @@ export class AuthService {
     password,
     name,
   }: registerParams): Promise<any> {
-    let userExists = await this.findAccountByEmail(email);
-    if (userExists) throw new ConflictException('Email already registered');
-    userExists = await this.findAccountByUsername(username);
-    if (userExists) throw new ConflictException('Username already registered');
-    else {
+    const userExists = await this.findAccount(email, username);
+    if (userExists) {
+      if (userExists.email === email)
+        throw new ConflictException('Email already registered');
+      else throw new ConflictException('Username already registered');
+    } else {
       const hashedPassword = await bcrypt.hash(
         password,
         parseInt(process.env.BCRYPT_SALT_ROUNDS),
@@ -99,19 +100,23 @@ export class AuthService {
     }
   }
 
-  async findAccountByEmail(email: string): Promise<any> {
-    const user = await this.prismaService.user.findUnique({
-      where: { email },
+  /**
+   * Checks whether email or username already exists
+   */
+
+  async findAccount(email: string, username: string): Promise<any> {
+    const user = await this.prismaService.user.findFirst({
+      where: { OR: [{ username }, { email }] },
     });
     return user;
   }
 
-  async findAccountByUsername(username: string): Promise<any> {
-    const user = await this.prismaService.user.findUnique({
-      where: { username },
-    });
-    return user;
-  }
+  // async findAccountByUsername(username: string): Promise<any> {
+  //   const user = await this.prismaService.user.findUnique({
+  //     where: { username },
+  //   });
+  //   return user;
+  // }
   async addUser({ email, password, username, name }) {
     const user = await this.prismaService.user.create({
       data: {
