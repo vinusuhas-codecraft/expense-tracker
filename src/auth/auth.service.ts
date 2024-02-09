@@ -1,4 +1,3 @@
-// import type { User } from '/../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -9,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { signInDto } from './dtos/auth.dtos';
-import { Request, Response } from 'express';
+
 interface registerParams {
   email: string;
   username: string;
@@ -23,7 +22,7 @@ export class AuthService {
     private prismaService: PrismaService,
   ) {}
 
-  async signin(dto: signInDto, req: Request, res: Response) {
+  async signin(dto: signInDto) {
     const { email, password } = dto;
 
     const foundUser = await this.prismaService.user.findUnique({
@@ -49,16 +48,8 @@ export class AuthService {
     if (!token) {
       throw new ForbiddenException();
     }
-    res.cookie('token', token);
-    const refreshTokens = await this.refreshToken({ email });
-    res.cookie('refreshToken', refreshTokens.refreshToken);
-    return res.send({ messge: 'logged in successfully' });
-  }
-
-  async signout(req: Request, res: Response) {
-    res.clearCookie('token');
-    res.clearCookie('refreshToken');
-    return res.send({ message: 'Logged out succefully' });
+    const { refreshToken } = await this.refreshToken({ email });
+    return { messge: 'logged in successfully', token, refreshToken };
   }
 
   async refreshToken(args: { email: string }) {
