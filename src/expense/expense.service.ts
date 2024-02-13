@@ -1,24 +1,50 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ExpenseService {
-  create() {
-    return 'This action adds a new expense';
+  constructor(private prismaService: PrismaService) {}
+
+  async insert({ amount, title, userID }) {
+    const result = await this.prismaService.expense.create({
+      data: {
+        amount,
+        title,
+        userID,
+      },
+    });
+    return result;
   }
 
-  findAll() {
-    return `This action returns all expense`;
+  async findAll({ userId }) {
+    const result = await this.prismaService.expense.findMany({ data: { id } });
+    return result;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} expense`;
+  async findOne(id: number) {
+    const result = await this.prismaService.expense.findOne({ data: { id } });
+    return result;
   }
 
-  update(id: number) {
-    return `This action updates a #${id} expense`;
+  async update(id: number, { title, amount }) {
+    const updatedItem = await this.prismaService.expense.update({
+      where: {
+        id,
+      },
+      data: {
+        title,
+        amount,
+      },
+    });
+    return updatedItem;
   }
 
-  delete(id: number) {
-    return `This action delete a #${id} expense`;
+  async delete(id: number) {
+    const deletedItem = await this.prismaService.expense.delete({
+      where: {
+        id,
+      },
+    });
+    return deletedItem;
   }
 }
