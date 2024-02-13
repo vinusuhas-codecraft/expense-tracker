@@ -111,12 +111,9 @@ export class AuthService {
     return user;
   }
 
-  // async findAccountByUsername(username: string): Promise<any> {
-  //   const user = await this.prismaService.user.findUnique({
-  //     where: { username },
-  //   });
-  //   return user;
-  // }
+  /**
+   * Create an account and stores the user account in the database
+   */
   async addUser({ email, password, username, name }) {
     const user = await this.prismaService.user.create({
       data: {
@@ -128,5 +125,18 @@ export class AuthService {
     });
 
     return user;
+  }
+
+  async validateToken(token) {
+    const accessToken = token;
+    if (accessToken) {
+      const validToken = this.jwtService.verify(
+        accessToken,
+        process.env.JWT_SECRET as Secret,
+      ) as JwtPayload;
+      console.log('cookie id', validToken);
+      return validToken.userId;
+    }
+    return undefined;
   }
 }

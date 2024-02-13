@@ -16,13 +16,15 @@ model User {
   username String @unique
   email    String @unique
   password String
+  expense  Expense[]
 }
 
 model Expense {
   id        Int      @id @default(autoincrement())
   amount     Float
-  userId     Int
+  title   String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  User      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  userId     Int    
 }
