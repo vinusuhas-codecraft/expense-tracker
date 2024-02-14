@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -48,10 +48,15 @@ export class ExpenseService {
    * @returns {Promise<any>} A promise that resolves to the found expense.
    */
   async findOne(id: number, userId: number) {
-    const result = await this.prismaService.expense.findUnique({
-      where: { id, userId },
-    });
-    return result;
+    try {
+      const result = await this.prismaService.expense.findUnique({
+        where: { id, userId },
+      });
+      return result;
+    } catch (error) {
+      console.log(error.message);
+      throw new NotFoundException('Transaction ID not found');
+    }
   }
 
   /**
@@ -65,17 +70,22 @@ export class ExpenseService {
    * @returns {Promise<any>} A promise that resolves to the updated expense.
    */
   async update(id: number, { title, amount }, userId) {
-    const updatedItem = await this.prismaService.expense.update({
-      where: {
-        id,
-        userId,
-      },
-      data: {
-        title,
-        amount,
-      },
-    });
-    return updatedItem;
+    try {
+      const updatedItem = await this.prismaService.expense.update({
+        where: {
+          id,
+          userId,
+        },
+        data: {
+          title,
+          amount,
+        },
+      });
+      return updatedItem;
+    } catch (error) {
+      console.log(error);
+      throw new NotFoundException('Transaction ID not found');
+    }
   }
 
   /**
@@ -86,12 +96,17 @@ export class ExpenseService {
    * @returns {Promise<any>} A promise that resolves to the deleted expense.
    */
   async delete(id: number, userId: number) {
-    const deletedItem = await this.prismaService.expense.delete({
-      where: {
-        id,
-        userId,
-      },
-    });
-    return deletedItem;
+    try {
+      const deletedItem = await this.prismaService.expense.delete({
+        where: {
+          id,
+          userId,
+        },
+      });
+      return deletedItem;
+    } catch (error) {
+      console.log(error.message);
+      throw new NotFoundException('Transaction ID not found');
+    }
   }
 }
