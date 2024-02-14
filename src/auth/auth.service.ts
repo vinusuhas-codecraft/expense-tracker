@@ -7,6 +7,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+// import type { JwtPayload } from 'jsonwebtoken';
 import { signInDto } from './dtos/auth.dtos';
 
 interface registerParams {
@@ -42,7 +43,7 @@ export class AuthService {
       throw new BadRequestException('Invalid login credentials');
     }
     const token = await this.signToken({
-      id: foundUser.id,
+      userId: foundUser.id,
       email: foundUser.email,
     });
     if (!token) {
@@ -66,7 +67,7 @@ export class AuthService {
     return await bcrypt.compare(args.password, args.hash);
   }
 
-  async signToken(args: { id: number; email: string }) {
+  async signToken(args: { userId: number; email: string }) {
     const payload = args;
     const token = this.jwtService.signAsync(payload, {
       secret: process.env.JWT_SECRET,
@@ -127,16 +128,14 @@ export class AuthService {
     return user;
   }
 
-  async validateToken(token) {
-    const accessToken = token;
-    if (accessToken) {
-      const validToken = this.jwtService.verify(
-        accessToken,
-        process.env.JWT_SECRET as Secret,
-      ) as JwtPayload;
-      console.log('cookie id', validToken);
-      return validToken.userId;
-    }
-    return undefined;
-  }
+  // async validateToken(accessToken: string) {
+  //   if (accessToken) {
+  //     const validToken = this.jwtService.verify(
+  //       accessToken,
+  //       process.env.JWT_SECRET as JwtVerifyOptions,
+  //     ) as JwtPayload;
+  //     return validToken.userId;
+  //   }
+  //   return false;
+  // }
 }
