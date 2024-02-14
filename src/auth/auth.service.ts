@@ -6,8 +6,8 @@ import {
   Injectable,
   ConflictException,
 } from '@nestjs/common';
-import { JwtService, JwtVerifyOptions } from '@nestjs/jwt';
-import type { JwtPayload } from 'jsonwebtoken';
+import { JwtService } from '@nestjs/jwt';
+// import type { JwtPayload } from 'jsonwebtoken';
 import { signInDto } from './dtos/auth.dtos';
 
 interface registerParams {
@@ -126,16 +126,5 @@ export class AuthService {
     });
 
     return user;
-  }
-
-  async validateToken(accessToken: string) {
-    if (accessToken) {
-      const validToken = this.jwtService.verify(
-        accessToken,
-        process.env.JWT_SECRET as JwtVerifyOptions,
-      ) as JwtPayload;
-      return validToken.userId;
-    }
-    return false;
   }
 }
