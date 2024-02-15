@@ -14,4 +14,21 @@ export class UserService {
     });
     return res;
   }
+  async totalUserExpenses(userId): Promise<any> {
+    const result = await this.prismaService.expense.aggregate({
+      _sum: {
+        amount: true,
+      },
+      where: {
+        userId: {
+          equals: userId,
+        },
+      },
+      orderBy: {
+        amount: 'asc',
+      },
+      // take: 5, //pagination
+    });
+    return result._sum;
+  }
 }
