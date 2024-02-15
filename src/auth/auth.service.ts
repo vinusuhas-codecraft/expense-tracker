@@ -15,6 +15,7 @@ interface registerParams {
   username: string;
   password: string;
   name: string;
+  image?: string;
 }
 @Injectable()
 export class AuthService {
@@ -80,6 +81,7 @@ export class AuthService {
     username,
     password,
     name,
+    image,
   }: registerParams): Promise<any> {
     const userExists = await this.findAccount(email, username);
     if (userExists) {
@@ -96,6 +98,7 @@ export class AuthService {
         password: hashedPassword,
         username,
         name,
+        image,
       });
       return result;
     }
@@ -115,13 +118,14 @@ export class AuthService {
   /**
    * Create an account and stores the user account in the database
    */
-  async addUser({ email, password, username, name }) {
+  async addUser({ email, password, username, name, image }) {
     const user = await this.prismaService.user.create({
       data: {
         email,
         password,
         username,
         name,
+        image,
       },
     });
 

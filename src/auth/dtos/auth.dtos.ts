@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   Matches,
   MinLength,
+  IsOptional,
 } from 'class-validator';
 export class signInDto {
   @IsNotEmpty()
@@ -35,4 +36,8 @@ export class registerDto {
   @IsString()
   @MinLength(4)
   username: string;
+
+  @IsString()
+  @IsOptional()
+  image: string;
 }
