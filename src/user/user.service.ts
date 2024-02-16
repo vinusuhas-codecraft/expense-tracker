@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { AddressParams, TotalExpenseResult } from './user.interface';
 
 @Injectable()
@@ -28,7 +28,6 @@ export class UserService {
       orderBy: {
         amount: 'asc',
       },
-      // take: 5, //pagination
     });
     return result._sum;
   }
