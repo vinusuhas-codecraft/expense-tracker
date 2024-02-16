@@ -1,6 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ExpenseParams } from './expense.interface';
 
+interface IValue {
+  amount: number;
+  title: string;
+}
 @Injectable()
 export class ExpenseService {
   constructor(private prismaService: PrismaService) {}
@@ -15,7 +20,10 @@ export class ExpenseService {
    * @returns {Promise<any>} A promise that resolves to the created expense.
    */
 
-  async insert({ amount, title }, userId: number) {
+  async insert(
+    { amount, title }: IValue,
+    userId: number,
+  ): Promise<ExpenseParams> {
     const result = await this.prismaService.expense.create({
       data: {
         amount,
@@ -33,7 +41,7 @@ export class ExpenseService {
    * @returns {Promise<any[]>} A promise that resolves to an array of expenses.
    */
 
-  async findAll(userId: number) {
+  async findAll(userId: number): Promise<ExpenseParams[]> {
     const result = await this.prismaService.expense.findMany({
       where: { userId },
     });
@@ -45,16 +53,14 @@ export class ExpenseService {
    *
    * @param {number} id - The ID of the expense.
    * @param {number} userId - The ID of the user associated with the expense.
-   * @returns {Promise<any>} A promise that resolves to the found expense.
    */
-  async findOne(id: number, userId: number) {
+  async findOne(id: number, userId: number): Promise<ExpenseParams> {
     try {
       const result = await this.prismaService.expense.findUnique({
         where: { id, userId },
       });
       return result;
     } catch (error) {
-      console.log(error.message);
       throw new NotFoundException('Transaction ID not found');
     }
   }
@@ -69,7 +75,11 @@ export class ExpenseService {
    * @param {number} userId - The ID of the user associated with the expense.
    * @returns {Promise<any>} A promise that resolves to the updated expense.
    */
-  async update(id: number, { title, amount }, userId) {
+  async update(
+    id: number,
+    { title, amount }: IValue,
+    userId: number,
+  ): Promise<ExpenseParams> {
     try {
       const updatedItem = await this.prismaService.expense.update({
         where: {
@@ -95,7 +105,7 @@ export class ExpenseService {
    * @param {number} userId - The ID of the user associated with the expense.
    * @returns {Promise<any>} A promise that resolves to the deleted expense.
    */
-  async delete(id: number, userId: number) {
+  async delete(id: number, userId: number): Promise<ExpenseParams> {
     try {
       const deletedItem = await this.prismaService.expense.delete({
         where: {
