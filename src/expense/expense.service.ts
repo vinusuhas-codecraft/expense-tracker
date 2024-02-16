@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { ExpenseParams } from './expense.interface';
 
 interface IValue {
@@ -93,7 +93,6 @@ export class ExpenseService {
       });
       return updatedItem;
     } catch (error) {
-      console.log(error);
       throw new NotFoundException('Transaction ID not found');
     }
   }
@@ -115,7 +114,6 @@ export class ExpenseService {
       });
       return deletedItem;
     } catch (error) {
-      console.log(error.message);
       throw new NotFoundException('Transaction ID not found');
     }
   }
