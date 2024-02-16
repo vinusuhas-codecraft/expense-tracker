@@ -7,16 +7,14 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-// import type { JwtPayload } from 'jsonwebtoken';
 import { signInDto } from './dtos/auth.dtos';
+import {
+  ComparePasswordParams,
+  RefreshTokenParams,
+  UserAccountParams,
+  SignInTokenParams,
+} from './auth.interface';
 
-interface registerParams {
-  email: string;
-  username: string;
-  password: string;
-  name: string;
-  image?: string;
-}
 @Injectable()
 export class AuthService {
   constructor(
@@ -24,7 +22,11 @@ export class AuthService {
     private prismaService: PrismaService,
   ) {}
 
-  async signin(dto: signInDto) {
+  async signin(dto: signInDto): Promise<{
+    messge: string;
+    token: string;
+    refreshToken: string;
+  }> {
     const { email, password } = dto;
 
     const foundUser = await this.prismaService.user.findUnique({
@@ -54,7 +56,9 @@ export class AuthService {
     return { messge: 'logged in successfully', token, refreshToken };
   }
 
-  async refreshToken(args: { email: string }) {
+  async refreshToken(args: RefreshTokenParams): Promise<{
+    refreshToken: string;
+  }> {
     const payload = args;
     return {
       refreshToken: await this.jwtService.sign(payload, {
@@ -64,11 +68,11 @@ export class AuthService {
     };
   }
 
-  async comparePasswords(args: { hash: string; password: string }) {
+  async comparePasswords(args: ComparePasswordParams): Promise<string> {
     return await bcrypt.compare(args.password, args.hash);
   }
 
-  async signToken(args: { userId: number; email: string }) {
+  async signToken(args: SignInTokenParams): Promise<string> {
     const payload = args;
     const token = this.jwtService.signAsync(payload, {
       secret: process.env.JWT_SECRET,
@@ -82,7 +86,7 @@ export class AuthService {
     password,
     name,
     image,
-  }: registerParams): Promise<any> {
+  }: UserAccountParams): Promise<UserAccountParams> {
     const userExists = await this.findAccount(email, username);
     if (userExists) {
       if (userExists.email === email)
@@ -108,7 +112,10 @@ export class AuthService {
    * Checks whether email or username already exists
    */
 
-  async findAccount(email: string, username: string): Promise<any> {
+  async findAccount(
+    email: string,
+    username: string,
+  ): Promise<UserAccountParams> {
     const user = await this.prismaService.user.findFirst({
       where: { OR: [{ username }, { email }] },
     });
@@ -118,7 +125,13 @@ export class AuthService {
   /**
    * Create an account and stores the user account in the database
    */
-  async addUser({ email, password, username, name, image }) {
+  async addUser({
+    email,
+    password,
+    username,
+    name,
+    image,
+  }: UserAccountParams): Promise<UserAccountParams> {
     const user = await this.prismaService.user.create({
       data: {
         email,

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   Req,
   UploadedFile,
@@ -21,8 +22,16 @@ export class UserController {
 
   @Post('address')
   async createAddress(@Body() body: createAdddressDto, @Req() req) {
-    console.log(req.user);
     return await this.userService.createAddress(body, req.user.userId);
+  }
+
+  @Get('balance')
+  async getUsertExpenses(@Req() req) {
+    try {
+      return await this.userService.totalUserExpenses(req.user.userId);
+    } catch {
+      return 'Something went wrong';
+    }
   }
 
   @Post('user_image')
