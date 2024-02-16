@@ -1,14 +1,11 @@
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import {
-  BadRequestException,
-  ForbiddenException,
   Injectable,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-// import type { JwtPayload } from 'jsonwebtoken';
-import { signInDto } from './dtos/auth.dtos';
 
 interface registerParams {
   email: string;
@@ -17,6 +14,11 @@ interface registerParams {
   name: string;
   image?: string;
 }
+
+
+// interface User{
+
+// }
 @Injectable()
 export class AuthService {
   constructor(
@@ -24,56 +26,45 @@ export class AuthService {
     private prismaService: PrismaService,
   ) {}
 
-  async signin(dto: signInDto) {
-    const { email, password } = dto;
-
-    const foundUser = await this.prismaService.user.findUnique({
-      where: {
-        email,
-      },
+  async validateUser(email: string, password: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: { email },
     });
-    if (!foundUser) {
+    if (!user) {
       throw new BadRequestException('User Not Found');
     }
 
-    const compareSuccess = await this.comparePasswords({
-      password,
-      hash: foundUser.password,
-    });
-    if (!compareSuccess) {
-      throw new BadRequestException('Invalid login credentials');
+    if (user && (await bcrypt.compare(password, user.password))) {
+      const { password, ...result } = user;
+      return result;
     }
-    const token = await this.signToken({
-      userId: foundUser.id,
-      email: foundUser.email,
-    });
-    if (!token) {
-      throw new ForbiddenException();
-    }
-    const { refreshToken } = await this.refreshToken({ email });
-    return { messge: 'logged in successfully', token, refreshToken };
+    return null;
   }
 
-  async refreshToken(args: { email: string }) {
-    const payload = args;
+  async signin(user) {
+    const payload = {
+      username: user.email,
+      sub: {
+        user,
+      },
+    };
     return {
-      refreshToken: await this.jwtService.sign(payload, {
-        secret: process.env.JWT_SECRET,
-        expiresIn: '7d',
-      }),
+      accessToken: this.jwtService.sign(payload),
+      refreshToken: this.jwtService.sign(payload, { expiresIn: '7d' }),
     };
   }
 
-  async comparePasswords(args: { hash: string; password: string }) {
-    return await bcrypt.compare(args.password, args.hash);
-  }
+  async refreshToken(user) {
+    const payload = {
+      username: user.email,
+      sub: {
+        user,
+      },
+    };
 
-  async signToken(args: { userId: number; email: string }) {
-    const payload = args;
-    const token = this.jwtService.signAsync(payload, {
-      secret: process.env.JWT_SECRET,
-    });
-    return token;
+    return {
+      accessToken: this.jwtService.sign(payload),
+    };
   }
 
   async register({

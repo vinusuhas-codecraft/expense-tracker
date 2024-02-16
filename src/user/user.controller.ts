@@ -1,6 +1,8 @@
 import {
   Body,
   Controller,
+  Get,
+  Param,
   Post,
   Req,
   UploadedFile,
@@ -23,6 +25,14 @@ export class UserController {
   async createAddress(@Body() body: createAdddressDto, @Req() req) {
     console.log(req.user);
     return await this.userService.createAddress(body, req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/comments')
+  getUserComment(@Param('id') id: string) {
+    console.log(id);
+
+    return 'comment is printiing';
   }
 
   @Post('user_image')
