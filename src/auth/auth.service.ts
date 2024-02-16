@@ -1,18 +1,15 @@
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import {
-  BadRequestException,
-  ForbiddenException,
   Injectable,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { signInDto } from './dtos/auth.dtos';
 import {
-  ComparePasswordParams,
   RefreshTokenParams,
-  UserAccountParams,
   SignInTokenParams,
+  UserAccountParams,
 } from './auth.interface';
 
 @Injectable()
@@ -22,62 +19,59 @@ export class AuthService {
     private prismaService: PrismaService,
   ) {}
 
-  async signin(dto: signInDto): Promise<{
-    messge: string;
-    token: string;
-    refreshToken: string;
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<{
+    id: number;
+    name: string;
+    username: string;
+    email: string;
+    image: string;
   }> {
-    const { email, password } = dto;
-
-    const foundUser = await this.prismaService.user.findUnique({
-      where: {
-        email,
-      },
+    const user = await this.prismaService.user.findUnique({
+      where: { email },
     });
-    if (!foundUser) {
+    if (!user) {
       throw new BadRequestException('User Not Found');
     }
 
-    const compareSuccess = await this.comparePasswords({
-      password,
-      hash: foundUser.password,
-    });
-    if (!compareSuccess) {
-      throw new BadRequestException('Invalid login credentials');
+    if (user && (await bcrypt.compare(password, user.password))) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...result } = user;
+      return result;
     }
-    const token = await this.signToken({
-      userId: foundUser.id,
-      email: foundUser.email,
-    });
-    if (!token) {
-      throw new ForbiddenException();
-    }
-    const { refreshToken } = await this.refreshToken({ email });
-    return { messge: 'logged in successfully', token, refreshToken };
+    return null;
   }
 
-  async refreshToken(args: RefreshTokenParams): Promise<{
+  async signin(user: SignInTokenParams): Promise<{
+    accessToken: string;
     refreshToken: string;
   }> {
-    const payload = args;
+    const payload = {
+      email: user.email,
+      sub: {
+        user,
+      },
+    };
     return {
-      refreshToken: await this.jwtService.sign(payload, {
-        secret: process.env.JWT_SECRET,
-        expiresIn: '7d',
-      }),
+      accessToken: this.jwtService.sign(payload),
+      refreshToken: this.jwtService.sign(payload, { expiresIn: '7d' }),
     };
   }
 
-  async comparePasswords(args: ComparePasswordParams): Promise<string> {
-    return await bcrypt.compare(args.password, args.hash);
-  }
+  async refreshToken(user: RefreshTokenParams): Promise<{
+    accessToken: string;
+  }> {
+    const payload = {
+      sub: {
+        user,
+      },
+    };
 
-  async signToken(args: SignInTokenParams): Promise<string> {
-    const payload = args;
-    const token = this.jwtService.signAsync(payload, {
-      secret: process.env.JWT_SECRET,
-    });
-    return token;
+    return {
+      accessToken: this.jwtService.sign(payload),
+    };
   }
 
   async register({

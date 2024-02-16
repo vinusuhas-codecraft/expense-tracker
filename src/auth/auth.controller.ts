@@ -1,7 +1,15 @@
-import { Body, Controller, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Req,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { registerDto } from './dtos/auth.dtos';
-import { signInDto } from './dtos/auth.dtos';
+import { RefershJwtAuthGuard } from './guards/refresh-jwt-auth.guard';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -13,12 +21,14 @@ export class AuthController {
   }
 
   @Post('signin')
-  async signin(@Body() dto: signInDto) {
-    return await this.authService.signin(dto);
+  @UseGuards(LocalAuthGuard)
+  async signin(@Request() req) {
+    return await this.authService.signin(req.user);
   }
 
+  @UseGuards(RefershJwtAuthGuard)
   @Post('refresh')
-  refreshToken(@Req() req) {
+  async refreshToken(@Req() req) {
     return this.authService.refreshToken(req.user);
   }
 }

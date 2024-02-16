@@ -11,6 +11,8 @@ export class signInDto {
   @IsNotEmpty()
   @IsEmail()
   public email: string;
+  // @IsNotEmpty()
+  // public username: string;
 
   @IsNotEmpty()
   @IsString()
