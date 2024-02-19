@@ -20,7 +20,7 @@ export class AuthService {
   ) {}
 
   async validateUser(
-    email: string,
+    username: string,
     password: string,
   ): Promise<{
     id: number;
@@ -30,7 +30,7 @@ export class AuthService {
     image: string;
   }> {
     const user = await this.prismaService.user.findUnique({
-      where: { email },
+      where: { username },
     });
     if (!user) {
       throw new BadRequestException('User Not Found');
@@ -49,7 +49,7 @@ export class AuthService {
     refreshToken: string;
   }> {
     const payload = {
-      email: user.email,
+      // email: user.email,
       sub: {
         user,
       },
